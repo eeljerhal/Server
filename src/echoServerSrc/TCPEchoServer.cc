@@ -18,9 +18,11 @@
  */
 
 #include "YASL.h"      // For Socket, ServerSocket, and SocketException
+#include "json.hpp"
 #include "checkArgs.h"
 #include <iostream>    // For cerr and cout
 #include <cstdlib>     // For atoi()
+#include <fstream>
 
 const uint32_t RCVBUFSIZE = 32;    // Size of receive buffer
 
@@ -38,15 +40,24 @@ void HandleTCPClient(TCPSocket *sock) {
 		std::cerr << "Unable to get foreign port" << std::endl;
 	}
 	std::cout << std::endl;
-
-	// Send received string and receive again until the end of transmission
-	char echoBuffer[RCVBUFSIZE];
-	uint32_t recvMsgSize;
-	while ((recvMsgSize = sock->recv(echoBuffer, RCVBUFSIZE)) > 0) { // Zero means
-	                                                 // end of transmission
-		// Echo message back to client
-		sock->send(echoBuffer, recvMsgSize);
+	
+	//header response
+	sock->send("HTTP/1.1 200 OK\r\n", 17);
+	sock->send("Content-Type: text/html\r\n\r\n", 27);
+	//se lee archivo html
+	std::string linea;
+	std::string html = "";
+	std::ifstream archivo("../www-data/pagina1.html");
+	if (archivo.is_open()){
+		while(getline(archivo,linea)){
+			html = html + linea + "\n";
+		}
+		archivo.close();
+	}else{
+		std::cout << "No se pudo abrir html"; 
 	}
+	//se envía el html
+	sock->send(html.c_str(), html.length());
 	delete sock;
 }
 
@@ -59,7 +70,6 @@ int main(int argc, char *argv[]) {
 
 	try {
 		TCPServerSocket servSock(echoServPort);     // Server Socket object
-
 		for (;;) {   // Run forever
 			HandleTCPClient(servSock.accept());       // Wait for a client to connect
 		}

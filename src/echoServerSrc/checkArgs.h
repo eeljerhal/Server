@@ -9,7 +9,7 @@ private:
 	// 1) Modificar esta sección
 	const std::string optString = "p:h";
 	
-	const std::string opciones = "-p PORT [-h]";
+	const std::string opciones = "-p puerto_tcp [-h]";
 
 	const std::string descripcion  = "Descripción:\n"
 		                             "\t-p   Puerto del servidor web\n"
