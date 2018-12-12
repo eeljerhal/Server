@@ -40,21 +40,62 @@ void HandleTCPClient(TCPSocket *sock) {
 		std::cerr << "Unable to get foreign port" << std::endl;
 	}
 	std::cout << std::endl;
-	
-	//header response
-	sock->send("HTTP/1.1 200 OK\r\n", 17);
-	sock->send("Content-Type: text/html\r\n\r\n", 27);
+
+	char buffer[RCVBUFSIZE + 1];    // Buffer para el echo string + \0
+	uint32_t bytesReceived = 0;              // Bytes leídos en cada recv()
+	uint8_t opcion = 1;
+	std::string headerRequest = "";
+
+	while (opcion){
+		bytesReceived = sock->recv(buffer, RCVBUFSIZE); //se lee request
+		
+		if (bytesReceived < 0) {
+			std::cerr << "No se puede leer." << std::endl;
+		}
+
+		buffer[bytesReceived] = '\0';        // termina el linea!
+		headerRequest = headerRequest + buffer + "\n";	//Se concatena cada linea en headerRequest
+		
+		if (bytesReceived < 32) {	//Cuando se está llegando al final del request
+			opcion = 0;	//Salir del while
+		}
+		
+	}
+
+	std::string pagina;
+	pagina = headerRequest.substr (4, headerRequest.substr(4).find(" ")); //se recupera la página
+
+	std::string headerResponse;
+	std::ifstream archivo;
+
+	if(pagina == "/"){
+		archivo.open("../www-data/index.html");
+		headerResponse= "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"; //header response
+	}else if(pagina == "/pagina1.html"){
+		archivo.open("../www-data/pagina1.html");
+		headerResponse= "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"; //header response
+	}else if(pagina == "/pagina2.html"){
+		archivo.open("../www-data/pagina2.html");
+		headerResponse= "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"; //header response
+	}else if(pagina == "/pagina3.html"){
+		archivo.open("../www-data/pagina3.html");
+		headerResponse= "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"; //header response
+	}else{
+		archivo.open("../www-error/404.html");
+		headerResponse= "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n"; //header response
+	}
+
+	sock->send(headerResponse.c_str(), headerResponse.length());	//Se envía respuesta al cliente
 	//se lee archivo html
 	std::string linea;
 	std::string html = "";
-	std::ifstream archivo("../www-data/pagina1.html");
 	if (archivo.is_open()){
 		while(getline(archivo,linea)){
 			html = html + linea + "\n";
 		}
 		archivo.close();
 	}else{
-		std::cout << "No se pudo abrir html"; 
+		std::cout << "No se pudo abrir html\n"; 
 	}
 	//se envía el html
 	sock->send(html.c_str(), html.length());
