@@ -54,10 +54,6 @@ void HandleTCPClient(TCPSocket *sock, std::string root_dir, std::string notFound
 		}
 	}
 
-	/*SE OBTIENE EL CONTENIDO QUE SE PIDE EN EL REQUEST*/
-	std::string pagina;
-	pagina = headerRequest.substr (4, headerRequest.substr(4).find(" ")); //se recupera la página requerida
-	
 	/*SE MUESTRAN LOS DATOS DEL CLIENTE Y LA PETICIÓN QUE SE REALIZÓ*/
 	try {
 		std::cout << sock->getForeignAddress() << ":";
@@ -69,27 +65,39 @@ void HandleTCPClient(TCPSocket *sock, std::string root_dir, std::string notFound
 	} catch (SocketException e) {
 		std::cerr << "No se pudo obtener el puerto del cliente" << std::endl;
 	}
-	std::cout << " Con una peticion a: " << pagina << std::endl;
-	
-	/*SE COMPRUEBA SI ES QUE EXISTE DICHO CONTENIDO EN EL SERVIDOR*/
-	if(pagina == "/"){
-		root_dir = root_dir + "/index.html";
-		archivoHtml.open(root_dir);
-		headerResponse= "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Type: text/html\r\n\r\n"; //status line + header response
 
-	}else if((pagina == "/pagina1.html") || (pagina == "/pagina2.html") || (pagina == "/pagina3.html")){
-		root_dir = root_dir + pagina;
-		archivoHtml.open(root_dir);
-		headerResponse= "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"; //status line + header response
+	/*SE OBTIENE EL CONTENIDO QUE SE PIDE EN EL REQUEST*/
+	std::string pagina;
+	if(headerRequest.length() > 4){
+		pagina = headerRequest.substr(4, headerRequest.substr(4).find(" ")); //se recupera la página requerida
 
+		std::cout << " Con una peticion a: " << pagina << std::endl;
+		
+		/*SE COMPRUEBA SI ES QUE EXISTE DICHO CONTENIDO EN EL SERVIDOR*/
+		if(pagina == "/"){
+			root_dir = root_dir + "/index.html";
+			archivoHtml.open(root_dir);
+			headerResponse= "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Type: text/html\r\n\r\n"; //status line + header response
+
+		}else if((pagina == "/pagina1.html") || (pagina == "/pagina2.html") || (pagina == "/pagina3.html")){
+			root_dir = root_dir + pagina;
+			archivoHtml.open(root_dir);
+			headerResponse= "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"; //status line + header response
+
+		}else{
+			archivoHtml.open(notFoundFile);
+			headerResponse= "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n"; //status line + header response
+
+		}
 	}else{
+		std::cout << " Error al leer Request.\n";
+		notFoundFile = notFoundFile + "/400.html";
 		archivoHtml.open(notFoundFile);
-		headerResponse= "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n"; //status line + header response
-
+		headerResponse= "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n\r\n"; //status line + header response
 	}
 	
 	sock->send(headerResponse.c_str(), headerResponse.length());	//Se envía status line y header de la respuesta al cliente
-	
+		
 	/*SE LEE Y ENVIA EL CONTENIDO AL CLIENTE*/
 	//se lee archivo html
 	std::string linea;
