@@ -28,7 +28,7 @@ using namespace nlohmann;	//namespace para la utilización de json
 const uint32_t RCVBUFSIZE = 32;    // Tamaño del buffer
 
 // Manejo de la conexion de clientes TCP
-void HandleTCPClient(TCPSocket *sock) {
+void HandleTCPClient(TCPSocket *sock, std::string root_dir, std::string notFoundFile) {
 	
 	char buffer[RCVBUFSIZE + 1];    // Buffer para el echo string + \0
 	uint32_t bytesReceived = 0;              // Bytes leídos en cada recv()
@@ -73,21 +73,21 @@ void HandleTCPClient(TCPSocket *sock) {
 	
 	/*SE COMPRUEBA SI ES QUE EXISTE DICHO CONTENIDO EN EL SERVIDOR*/
 	if(pagina == "/"){
-		archivoHtml.open("../www-data/index.html");
-		headerResponse= "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Type: text/html\r\n\r\n"; //header response
-	}else if(pagina == "/pagina1.html"){
-		archivoHtml.open("../www-data/pagina1.html");
-		headerResponse= "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"; //header response
-	}else if(pagina == "/pagina2.html"){
-		archivoHtml.open("../www-data/pagina2.html");
-		headerResponse= "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"; //header response
-	}else if(pagina == "/pagina3.html"){
-		archivoHtml.open("../www-data/pagina3.html");
-		headerResponse= "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"; //header response
+		root_dir = root_dir + "/index.html";
+		archivoHtml.open(root_dir);
+		headerResponse= "HTTP/1.1 200 OK\r\nConnection: Close\r\nContent-Type: text/html\r\n\r\n"; //status line + header response
+
+	}else if((pagina == "/pagina1.html") || (pagina == "/pagina2.html") || (pagina == "/pagina3.html")){
+		root_dir = root_dir + pagina;
+		archivoHtml.open(root_dir);
+		headerResponse= "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"; //status line + header response
+
 	}else{
-		archivoHtml.open("../www-error/404.html");
-		headerResponse= "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n"; //header response
+		archivoHtml.open(notFoundFile);
+		headerResponse= "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n"; //status line + header response
+
 	}
+	
 	sock->send(headerResponse.c_str(), headerResponse.length());	//Se envía status line y header de la respuesta al cliente
 	
 	/*SE LEE Y ENVIA EL CONTENIDO AL CLIENTE*/
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
 	try {
 		TCPServerSocket servSock(ipAddress, serverPort);     // Se crea el socket con la ip, puerto
 		for (;;) {   // Run forever
-			HandleTCPClient(servSock.accept());       // Espera por la conexion de clientes
+			HandleTCPClient(servSock.accept(), root_dir, notFoundFile);       // Espera por la conexion de clientes
 		}
 	} catch (SocketException &e) {
 		std::cerr << e.what() << std::endl;

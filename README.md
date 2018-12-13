@@ -4,7 +4,7 @@
 -   Cindy Ramírez - cindy.ramirez@alumnos.uv.cl
 -   Jeremy Castro - jeremy.castroe@alumnos.uv.cl
 
-### Instalación
+## Instalación
 
 Para la compilación del programa ingrese a la carpeta ```bin ```:
 
@@ -48,7 +48,7 @@ Finalmente ejecutar:
 $ ./ServidorWeb
 ```
 
-# En caso de error en el puerto
+## En caso de error en el puerto
 
 Modificar el ```puerto``` en el archivo ```config.json```dentro de la carpeta ```bin```
 
