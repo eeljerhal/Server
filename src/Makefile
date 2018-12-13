@@ -1,15 +1,37 @@
-SRC2=echoServerSrc
+CC=gcc
+CXX=g++
+RM=rm -f
 
-default: all
+BIN=../bin/ServidorWeb
 
-all:
-	@cd $(SRC2) && make
+INCLUDES=-I includes
+LDFLAGS=
+LDLIBS=
+
+CXXFLAGS=-std=c++14 -Wall
+
+DIR_OBJ=objs
+
+SRCS=$(wildcard *.cc)
+
+OBJS=$(patsubst %.cc,$(DIR_OBJ)/%.o,$(SRCS))
+
+
+all: $(BIN)
+
+$(BIN): $(OBJS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS) $(INCLUDES)
+
+$(DIR_OBJ)/%.o: %.cc
+	@mkdir -p $(DIR_OBJ)
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(LDLIBS) $(LDFLAGS) $(INCLUDES)
 
 clean:
-	@cd $(SRC2) && make clean
-	@rm -rf *~
+	$(RM) $(OBJS)
+	$(RM) *~
 
 distclean: clean
-	@cd $(SRC2) && make distclean
+	$(RM) $(BIN)
 
 .PHONY: all clean distclean
+	
