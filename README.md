@@ -32,7 +32,9 @@ Estructura de las carpetas:
 │   ├── pagina2.html
 │   └── pagina3.html
 └── www-error
+    ├── 400.html
     └── 404.html
+    
 ```
 
 Ejecute lo siguiente para la compilación:
